@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: dirghayu-api
+    env: python
+    region: singapore
+    plan: free
+    buildCommand: "pip install --upgrade pip && pip install -r requirements-render.txt"
+    startCommand: "uvicorn src.api.server:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.10"
+      - key: PORT
+        generateValue: true
+    healthCheckPath: /health
