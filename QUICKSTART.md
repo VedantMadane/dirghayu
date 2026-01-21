@@ -2,12 +2,70 @@
 
 ## Installation
 
+### Option 1: uv (Recommended - 10-100x faster!)
+
 ```bash
-# 1. Install dependencies
+# Install uv (if not already installed)
+# Windows PowerShell:
+irm https://astral.sh/uv/install.ps1 | iex
+
+# macOS/Linux:
+# curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install dependencies with uv
+uv pip install -r requirements.txt
+
+# Or install project in editable mode
+uv pip install -e .
+
+# Create sample data
+python scripts/download_data.py
+```
+
+### Option 2: pip (Traditional)
+
+```bash
+# Install dependencies
 pip install -r requirements.txt
 
-# 2. Create sample data
+# Create sample data
 python scripts/download_data.py
+```
+
+**Speed Comparison:**
+- **uv**: ~5-10 seconds for all dependencies
+- **pip**: ~2-5 minutes for all dependencies
+
+### Quick Commands (Windows)
+
+```powershell
+# Show all available commands
+.\make.ps1 help
+
+# Install everything and run demo
+.\make.ps1 quick-start
+
+# Or run individual commands
+.\make.ps1 install      # Install with uv
+.\make.ps1 data         # Download data
+.\make.ps1 demo         # Run demo
+.\make.ps1 api          # Start API server
+```
+
+### Quick Commands (macOS/Linux)
+
+```bash
+# Show all available commands
+make help
+
+# Install everything and run demo
+make quick-start
+
+# Or run individual commands
+make install    # Install with uv
+make data       # Download data
+make demo       # Run demo
+make api        # Start API server
 ```
 
 ## Run Demo (Local)
