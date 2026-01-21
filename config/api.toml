@@ -1,0 +1,104 @@
+# Dirghayu API Configuration
+# Using TOML for clean, maintainable configuration
+
+[server]
+host = "0.0.0.0"
+port = 8000
+workers = 4
+debug = false
+log_level = "INFO"
+
+[api]
+title = "Dirghayu Genomics API"
+version = "1.0.0"
+description = "India-First Longevity-Focused Whole Genome Mapping"
+contact_email = "api@dirghayu.in"
+license = "Apache-2.0"
+
+[graphql]
+enabled = true
+endpoint = "/graphql"
+playground = true  # Development only
+introspection = true  # Development only
+
+[rest]
+enabled = true
+prefix = "/api/v1"
+openapi_url = "/api/v1/openapi.json"
+docs_url = "/api/v1/docs"
+
+[grpc]
+enabled = true
+port = 50051
+max_message_size = "100MB"
+
+[authentication]
+enabled = true
+provider = "oauth2"
+jwt_secret_key = "CHANGE_THIS_IN_PRODUCTION"
+token_expiry_hours = 24
+
+[authorization]
+enabled = true
+rbac_enabled = true
+default_role = "researcher"
+
+[rate_limiting]
+enabled = true
+requests_per_minute = 100
+burst_limit = 20
+
+[cors]
+enabled = true
+allow_origins = ["https://dirghayu.in", "https://app.dirghayu.in"]
+allow_credentials = true
+allow_methods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+allow_headers = ["*"]
+
+[database]
+url = "postgresql://user:password@localhost:5432/dirghayu"
+pool_size = 20
+max_overflow = 30
+pool_timeout = 30
+
+[cache]
+enabled = true
+redis_url = "redis://localhost:6379"
+ttl_seconds = 3600
+
+[storage]
+variant_data = "s3://dirghayu-variants/"
+protein_structures = "s3://dirghayu-structures/"
+analysis_results = "s3://dirghayu-results/"
+
+[monitoring]
+prometheus_enabled = true
+metrics_endpoint = "/metrics"
+health_check_endpoint = "/health"
+
+[logging]
+format = "json"
+file_path = "/var/log/dirghayu/api.log"
+max_size = "100MB"
+retention = "30d"
+
+[features]
+abdm_integration = true
+fhir_support = true
+multi_language = true
+offline_mode = true
+
+[compliance]
+hipaa_compliant = true
+gdpr_compliant = true
+icmr_guidelines = true
+
+[indian_languages]
+enabled = true
+supported = ["hi", "bn", "te", "mr", "ta", "gu", "ur", "pa"]
+default = "en"
+
+[regional_settings]
+time_zone = "Asia/Kolkata"
+date_format = "DD/MM/YYYY"
+number_format = "indian"

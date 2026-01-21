@@ -6,9 +6,54 @@ This document outlines the implementation plan for data schemas and API specific
 
 ## Data Schema Approaches Analysis
 
-### 1. JSON Schema (Recommended for API Flexibility)
-**Status:** ✅ Analyzed, Recommended
-**Use Case:** API validation, documentation, external integrations
+### 1. TOML Schema (Recommended for Configuration)
+**Status:** ✅ Analyzed, Recommended, Implemented
+**Use Case:** Project configuration, schema definitions, pipeline settings
+
+```toml
+[metadata]
+name = "GenomicVariant"
+version = "1.0.0"
+description = "Schema for genomic variant data with Indian population context"
+
+[fields.chromosome]
+type = "string"
+required = true
+enum = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "X", "Y", "MT"]
+
+[fields.position]
+type = "integer"
+required = true
+minimum = 1
+
+[fields.population_frequencies.genome_india_af]
+type = "number"
+required = false
+description = "GenomeIndia project allele frequency"
+minimum = 0.0
+maximum = 1.0
+
+[fields.population_frequencies.indigen_af]
+type = "number"
+required = false
+description = "IndiGen project allele frequency"
+minimum = 0.0
+maximum = 1.0
+```
+
+**Pros:**
+- More human-readable than JSON
+- Better for configuration files
+- Supports comments and better organization
+- Native Python support via `tomllib` (3.11+) or `toml` library
+
+**Cons:**
+- Not as widely supported as JSON
+- Less tooling ecosystem than JSON Schema
+
+### 2. JSON Schema (For API Validation)
+**Status:** ✅ Analyzed, Recommended for APIs
+**Use Case:** API request/response validation, OpenAPI documentation
 
 ```json
 {
@@ -17,35 +62,15 @@ This document outlines the implementation plan for data schemas and API specific
   "properties": {
     "chromosome": {"type": "string", "enum": ["1","2",...,"X","Y","MT"]},
     "position": {"type": "integer", "minimum": 1},
-    "ref_allele": {"type": "string", "pattern": "^[ACGTN]+$"},
-    "alt_allele": {"type": "string", "pattern": "^[ACGTN,]+$"},
-    "annotations": {
-      "type": "object",
-      "properties": {
-        "gene_symbol": {"type": "string"},
-        "protein_change": {"type": "string"},
-        "clinical_significance": {"enum": ["pathogenic", "benign", "uncertain"]}
-      }
-    },
-    "population_frequencies": {
-      "type": "object",
-      "properties": {
-        "genome_india_af": {"type": "number", "minimum": 0, "maximum": 1},
-        "indigen_af": {"type": "number", "minimum": 0, "maximum": 1}
-      }
-    }
+    "ref_allele": {"type": "string", "pattern": "^[ACGTN]+$"}
   }
 }
 ```
 
 **Pros:**
-- Human-readable validation
-- Language-agnostic
-- Extensible for Indian-specific fields
-- Good for API documentation
-
-**Cons:**
-- Not as performant as binary formats for large datasets
+- Industry standard for API validation
+- Rich ecosystem of tools and libraries
+- Excellent for OpenAPI/Swagger documentation
 
 ### 2. Protobuf (For High-Performance Data Transfer)
 **Status:** ✅ Analyzed, Recommended for internal pipelines

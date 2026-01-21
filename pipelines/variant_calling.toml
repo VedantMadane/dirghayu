@@ -1,0 +1,124 @@
+# Variant Calling Pipeline Configuration
+# TOML-based configuration for reproducible genomics workflows
+
+[pipeline]
+name = "variant_calling"
+version = "1.0.0"
+description = "WGS variant calling pipeline optimized for Indian populations"
+
+[workflow]
+orchestrator = "nextflow"
+profile = "aws_batch"
+resume = true
+work_dir = "/tmp/nextflow_work"
+
+[resources]
+max_cpus = 32
+max_memory = "128GB"
+max_time = "24h"
+
+[input]
+fastq_pattern = "**/*_{R1,R2}.fastq.gz"
+reference_genome = "gs://dirghayu-references/GRCh38.primary_assembly.genome.fa"
+known_sites = [
+    "gs://dirghayu-references/Homo_sapiens_assembly38.dbsnp138.vcf.gz",
+    "gs://dirghayu-references/Homo_sapiens_assembly38.known_indels.vcf.gz"
+]
+
+[steps.alignment]
+tool = "bwa-mem2"
+version = "2.2.1"
+threads = 16
+memory = "32GB"
+options = [
+    "-M",  # Mark shorter split hits as secondary
+    "-t 16"  # Number of threads
+]
+
+[steps.mark_duplicates]
+tool = "gatk"
+command = "MarkDuplicates"
+version = "4.4.0.0"
+memory = "16GB"
+options = [
+    "--OPTICAL_DUPLICATE_PIXEL_DISTANCE 2500",
+    "--CREATE_INDEX true"
+]
+
+[steps.base_recalibration]
+tool = "gatk"
+command = "BaseRecalibrator"
+version = "4.4.0.0"
+memory = "16GB"
+recalibration_mode = "BQSR"
+
+[steps.variant_calling]
+tool = "deepvariant"
+model = "WGS"
+version = "1.6.0"
+memory = "64GB"
+gpu = true
+gpu_memory = "16GB"
+
+[steps.variant_filtering]
+tool = "gatk"
+command = "VariantFiltration"
+version = "4.4.0.0"
+filters = [
+    "QD < 2.0",
+    "QUAL < 30.0",
+    "SOR > 3.0",
+    "FS > 60.0",
+    "MQ < 40.0",
+    "MQRankSum < -12.5",
+    "ReadPosRankSum < -8.0"
+]
+
+[steps.annotation]
+tool = "ensembl_vep"
+version = "110"
+species = "homo_sapiens"
+assembly = "GRCh38"
+cache_dir = "/opt/vep_cache"
+plugins = [
+    "CADD",
+    "SpliceAI",
+    "AlphaMissense"
+]
+
+[steps.indian_population_analysis]
+enabled = true
+genome_india_vcf = "gs://dirghayu-references/genome_india.vcf.gz"
+indigen_vcf = "gs://dirghayu-references/indigen.vcf.gz"
+igvdb_vcf = "gs://dirghayu-references/igvdb.vcf.gz"
+
+[quality_control]
+enabled = true
+tools = ["fastqc", "multiqc", "picard", "qualimap"]
+min_mapping_quality = 20
+min_base_quality = 20
+min_coverage = 10
+max_duplicate_rate = 0.1
+
+[output]
+bam_dir = "results/alignment/"
+vcf_dir = "results/variants/"
+qc_dir = "results/qc/"
+annotation_dir = "results/annotation/"
+
+[notifications]
+email_on_failure = true
+email_recipients = ["pipeline@dirghayu.in"]
+slack_webhook = "https://hooks.slack.com/services/..."
+
+[cloud]
+provider = "aws"
+region = "ap-south-1"
+instance_types = ["c5.9xlarge", "m5.8xlarge"]
+spot_instances = true
+max_spot_price = 2.0
+
+[cost_optimization]
+enable_spot = true
+auto_shutdown = true
+idle_timeout = "1h"
