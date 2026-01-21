@@ -202,10 +202,10 @@ class VariantAnnotator:
                     # Global allele frequency
                     annotation.gnomad_af = genome.get('af')
                     
-                    # South Asian frequency
+                    # Indian frequency
                     populations = genome.get('populations', [])
                     for pop in populations:
-                        if pop['id'] == 'sas':  # South Asian
+                        if pop['id'] == 'sas':  # Indian (gnomAD uses "sas" code)
                             annotation.gnomad_af_south_asian = pop.get('af')
         
         except Exception as e:
@@ -325,5 +325,5 @@ if __name__ == "__main__":
     print(f"Consequence: {annotation.consequence}")
     print(f"Protein change: {annotation.protein_change}")
     print(f"gnomAD AF (global): {annotation.gnomad_af}")
-    print(f"gnomAD AF (South Asian): {annotation.gnomad_af_south_asian}")
+    print(f"gnomAD AF (Indian): {annotation.gnomad_af_south_asian}")
     print(f"UniProt: {annotation.uniprot_id}")

@@ -150,7 +150,7 @@ maximum = 1.0
 [fields.population_frequencies.gnomad_sas_af]
 type = "number"
 required = false
-description = "gnomAD South Asian allele frequency"
+description = "gnomAD Indian allele frequency"
 minimum = 0.0
 maximum = 1.0
 

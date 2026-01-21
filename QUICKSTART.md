@@ -201,7 +201,7 @@ def deploy_to_gcp():
    - URL: https://clingen.igib.res.in/genomeIndia/
    - **Requires registration** - not auto-downloaded
 
-2. **1000 Genomes** (South Asian populations)
+2. **1000 Genomes** (Indian populations)
    - Included: GIH, ITU, STU, BEB, PJL
    - Auto-downloaded as proxy
 

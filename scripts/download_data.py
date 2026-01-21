@@ -60,8 +60,8 @@ def download_genome_india():
     print("  https://clingen.igib.res.in/genomeIndia/")
     print("  Download VCF files manually and place in:", genome_india_dir)
     
-    # For now, we'll use 1000 Genomes South Asian samples as proxy
-    print("\n[*] Downloading 1000 Genomes South Asian samples as proxy...")
+    # For now, we'll use 1000 Genomes Indian samples as proxy
+    print("\n[*] Downloading 1000 Genomes Indian samples as proxy...")
 
 def download_gnomad():
     """
@@ -108,9 +108,9 @@ def download_alphamissense():
 def download_1000genomes_sample():
     """
     Download small 1000 Genomes sample for testing
-    Focus on South Asian populations: GIH, ITU, STU, BEB, PJL
+    Focus on Indian populations: GIH, ITU, STU, BEB, PJL
     """
-    print("\n=== 1000 Genomes Project (South Asian subset) ===")
+    print("\n=== 1000 Genomes Project (Indian subset) ===")
     kg_dir = DATA_DIR / "1000genomes"
     kg_dir.mkdir(exist_ok=True)
     
@@ -118,7 +118,7 @@ def download_1000genomes_sample():
     metadata_url = "https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000_genomes_project/1000genomes.sequence.index"
     
     print("[*] Downloading 1000 Genomes metadata...")
-    print("\nSouth Asian populations:")
+    print("\nIndian populations:")
     print("  - GIH: Gujarati Indian from Houston, Texas")
     print("  - ITU: Indian Telugu from the UK")
     print("  - STU: Sri Lankan Tamil from the UK")
