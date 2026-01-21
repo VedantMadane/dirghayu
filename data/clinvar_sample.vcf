@@ -1,0 +1,19 @@
+##fileformat=VCFv4.2
+##fileDate=20260121
+##source=DirghaYu_Demo
+##reference=GRCh38
+##contig=<ID=1,length=248956422>
+##contig=<ID=19,length=58617616>
+##contig=<ID=9,length=138394717>
+##INFO=<ID=RS,Number=1,Type=String,Description="dbSNP ID">
+##INFO=<ID=GENE,Number=1,Type=String,Description="Gene symbol">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">
+##INFO=<ID=CLNSIG,Number=.,Type=String,Description="Clinical significance">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read depth">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE_INDIAN_001
+1	11856378	rs1801133	G	A	100	PASS	RS=rs1801133;GENE=MTHFR;AF=0.35;CLNSIG=pathogenic	GT:DP	1/1:45
+19	44908684	rs429358	C	T	100	PASS	RS=rs429358;GENE=APOE;AF=0.15;CLNSIG=risk_factor	GT:DP	0/1:52
+1	230710048	rs1801131	T	G	100	PASS	RS=rs1801131;GENE=MTHFR;AF=0.30;CLNSIG=likely_benign	GT:DP	0/1:38
+9	133257521	rs1333049	G	C	100	PASS	RS=rs1333049;GENE=CDKN2B-AS1;AF=0.48;CLNSIG=risk_factor	GT:DP	1/1:41
+1	55039974	rs713598	G	C	100	PASS	RS=rs713598;GENE=TAS2R38;AF=0.45;CLNSIG=benign	GT:DP	0/1:36

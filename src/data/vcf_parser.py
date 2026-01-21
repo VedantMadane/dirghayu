@@ -15,7 +15,12 @@ try:
     CYVCF2_AVAILABLE = True
 except ImportError:
     CYVCF2_AVAILABLE = False
-    print("⚠ cyvcf2 not available, falling back to basic parser")
+    import sys
+    # Only print if not in a test environment
+    if sys.stdout.encoding and 'utf' in sys.stdout.encoding.lower():
+        print("⚠ cyvcf2 not available, falling back to basic parser")
+    else:
+        print("[!] cyvcf2 not available, falling back to basic parser")
 
 
 @dataclass

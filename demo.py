@@ -32,10 +32,10 @@ def run_demo(vcf_path: Path):
     print(f"  Input: {vcf_path}")
     
     variants_df = parse_vcf_file(vcf_path)
-    print(f"  ✓ Found {len(variants_df)} variants")
+    print(f"  [OK] Found {len(variants_df)} variants")
     
     if len(variants_df) == 0:
-        print("  ⚠ No variants found!")
+        print("  [!] No variants found!")
         return
     
     print("\n  Sample variants:")
@@ -44,18 +44,18 @@ def run_demo(vcf_path: Path):
     # Step 2: Annotate variants
     print("\n[2/4] Annotating variants with public databases...")
     print("  Sources: Ensembl VEP, gnomAD")
-    print("  ⚠ This makes API calls - may take 30-60 seconds")
+    print("  [!] This makes API calls - may take 30-60 seconds")
     
     annotator = VariantAnnotator()
     annotated_df = annotator.annotate_dataframe(variants_df)
     
-    print("\n  ✓ Annotation complete!")
+    print("\n  [OK] Annotation complete!")
     print("\n  Annotated variants:")
     print(annotated_df[['rsid', 'gene_symbol', 'consequence', 'gnomad_af']].head())
     
     # Step 3: Train model (on synthetic data for demo)
     print("\n[3/4] Training nutrient deficiency predictor...")
-    print("  ⚠ Using synthetic data for demonstration")
+    print("  [!] Using synthetic data for demonstration")
     
     predictor = NutrientPredictor()
     predictor.train(
@@ -78,18 +78,18 @@ def run_demo(vcf_path: Path):
     print("=" * 80)
     
     # Display nutrient deficiency risks
-    print("\n📊 Nutrient Deficiency Risk Assessment:")
+    print("\n[NUTRIENT DEFICIENCY RISK ASSESSMENT]")
     print("-" * 80)
     
     risk_levels = {
-        (0.0, 0.3): ("LOW", "🟢"),
-        (0.3, 0.6): ("MODERATE", "🟡"),
-        (0.6, 1.0): ("HIGH", "🔴")
+        (0.0, 0.3): ("LOW", "[LOW]"),
+        (0.3, 0.6): ("MODERATE", "[MOD]"),
+        (0.6, 1.0): ("HIGH", "[HIGH]")
     }
     
     for nutrient, risk_score in predictions.items():
         # Determine risk level
-        level, icon = "UNKNOWN", "⚪"
+        level, icon = "UNKNOWN", "[?]"
         for (low, high), (l, i) in risk_levels.items():
             if low <= risk_score < high:
                 level, icon = l, i
@@ -105,7 +105,7 @@ def run_demo(vcf_path: Path):
             recommendations = get_recommendations(nutrient)
             print(f"   Recommendations:")
             for rec in recommendations:
-                print(f"     • {rec}")
+                print(f"     - {rec}")
     
     # Genetic insights from annotated variants
     print("\n" + "=" * 80)
@@ -115,7 +115,7 @@ def run_demo(vcf_path: Path):
     # Look for key variants
     key_variants = {
         'rs1801133': 'MTHFR C677T - Affects folate metabolism',
-        'rs429358': 'APOE ε4 - Increased Alzheimer\'s risk',
+        'rs429358': 'APOE e4 - Increased Alzheimer\'s risk',
         'rs601338': 'FUT2 - Affects vitamin B12 absorption',
         'rs2228570': 'VDR FokI - Affects vitamin D receptor'
     }
@@ -127,7 +127,7 @@ def run_demo(vcf_path: Path):
         for _, var in found_variants.iterrows():
             rsid = var['rsid']
             if rsid in key_variants:
-                print(f"\n  • {rsid} ({var['genotype']})")
+                print(f"\n  - {rsid} ({var['genotype']})")
                 print(f"    Gene: {var.get('gene_symbol', 'Unknown')}")
                 print(f"    Impact: {key_variants[rsid]}")
                 print(f"    Population frequency: {var.get('gnomad_af', 'Unknown')}")
@@ -135,7 +135,7 @@ def run_demo(vcf_path: Path):
         print("\n  No high-impact variants detected in this sample")
     
     print("\n" + "=" * 80)
-    print("✓ Demo complete!")
+    print("[OK] Demo complete!")
     print("=" * 80)
     print("\nNext steps:")
     print("  1. Upload your real VCF file from a sequencing provider")
