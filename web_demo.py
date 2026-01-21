@@ -130,6 +130,7 @@ def generate_html_report(vcf_path: Path) -> str:
     # Build variants cards
     variant_cards = []
     risk_summary = {'HIGH': 0, 'MODERATE': 0, 'LOW': 0}
+    variants_by_risk = {'HIGH': [], 'MODERATE': [], 'LOW': []}
     
     for _, variant in variants_df.iterrows():
         rsid = variant['rsid']
@@ -138,7 +139,7 @@ def generate_html_report(vcf_path: Path) -> str:
             risk_summary[info['risk_level']] += 1
             
             card = f'''
-            <div class="variant-card" style="border-left: 5px solid {info['color']};">
+            <div class="variant-card" id="variant-{rsid}" data-risk="{info['risk_level'].lower()}" style="border-left: 5px solid {info['color']};">
                 <div class="variant-header">
                     <h3 style="color: {info['color']}; margin: 0;">
                         <span style="font-size: 32px;">{info['emoji']}</span> {rsid} - {info['name']}
@@ -171,6 +172,7 @@ def generate_html_report(vcf_path: Path) -> str:
             </div>
             '''
             variant_cards.append(card)
+            variants_by_risk[info['risk_level']].append(rsid)
     
     # Build HTML
     html = f'''
@@ -189,7 +191,7 @@ def generate_html_report(vcf_path: Path) -> str:
             
             body {{
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
                 padding: 20px;
                 line-height: 1.6;
             }}
@@ -210,7 +212,7 @@ def generate_html_report(vcf_path: Path) -> str:
             
             .header h1 {{
                 font-size: 48px;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
                 background-clip: text;
@@ -241,6 +243,15 @@ def generate_html_report(vcf_path: Path) -> str:
                 padding: 20px;
                 border-radius: 10px;
                 text-align: center;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                text-decoration: none;
+                display: block;
+            }}
+            
+            .stat-card:hover {{
+                transform: translateY(-5px);
+                box-shadow: 0 10px 25px rgba(0,0,0,0.2);
             }}
             
             .stat-card.high {{
@@ -248,14 +259,29 @@ def generate_html_report(vcf_path: Path) -> str:
                 border: 2px solid #e74c3c;
             }}
             
+            .stat-card.high:hover {{
+                background: #fdd;
+                border-color: #c0392b;
+            }}
+            
             .stat-card.moderate {{
                 background: #fff3cd;
                 border: 2px solid #f39c12;
             }}
             
+            .stat-card.moderate:hover {{
+                background: #ffe4a0;
+                border-color: #e67e22;
+            }}
+            
             .stat-card.low {{
                 background: #d4edda;
                 border: 2px solid #27ae60;
+            }}
+            
+            .stat-card.low:hover {{
+                background: #c3e6cb;
+                border-color: #1e7e34;
             }}
             
             .stat-number {{
@@ -369,6 +395,96 @@ def generate_html_report(vcf_path: Path) -> str:
                 margin: 20px 0;
             }}
             
+            /* Floating Action Button */
+            .fab-container {{
+                position: fixed;
+                bottom: 30px;
+                right: 30px;
+                z-index: 1000;
+            }}
+            
+            .fab-button {{
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+                color: white;
+                border: none;
+                font-size: 24px;
+                cursor: pointer;
+                box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }}
+            
+            .fab-button:hover {{
+                transform: scale(1.1);
+                box-shadow: 0 6px 20px rgba(255, 107, 53, 0.6);
+            }}
+            
+            .fab-menu {{
+                position: absolute;
+                bottom: 70px;
+                right: 0;
+                display: none;
+                flex-direction: column;
+                gap: 10px;
+            }}
+            
+            .fab-container:hover .fab-menu {{
+                display: flex;
+            }}
+            
+            .fab-menu-item {{
+                background: white;
+                padding: 12px 20px;
+                border-radius: 25px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+                cursor: pointer;
+                transition: all 0.3s ease;
+                white-space: nowrap;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                font-size: 14px;
+                font-weight: 500;
+                color: #333;
+                text-decoration: none;
+            }}
+            
+            .fab-menu-item:hover {{
+                transform: translateX(-5px);
+                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+                background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+                color: white;
+            }}
+            
+            .fab-menu-item .icon {{
+                font-size: 18px;
+            }}
+            
+            .tooltip {{
+                position: absolute;
+                background: rgba(0,0,0,0.8);
+                color: white;
+                padding: 8px 12px;
+                border-radius: 5px;
+                font-size: 12px;
+                white-space: nowrap;
+                bottom: 50%;
+                right: 75px;
+                transform: translateY(50%);
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.3s;
+            }}
+            
+            .fab-button:hover .tooltip {{
+                opacity: 1;
+            }}
+            
             @media print {{
                 body {{
                     background: white;
@@ -377,6 +493,10 @@ def generate_html_report(vcf_path: Path) -> str:
                 
                 .variant-card {{
                     page-break-inside: avoid;
+                }}
+                
+                .fab-container {{
+                    display: none !important;
                 }}
             }}
         </style>
@@ -398,21 +518,21 @@ def generate_html_report(vcf_path: Path) -> str:
                 <p><strong>Clinically Significant Variants Found:</strong> {len(variant_cards)}</p>
                 
                 <div class="summary-stats">
-                    <div class="stat-card high">
+                    <a href="#high-risk-section" class="stat-card high" onclick="scrollToRisk('high'); return false;">
                         <div>⚠️ HIGH RISK</div>
                         <div class="stat-number">{risk_summary['HIGH']}</div>
                         <div>variant(s)</div>
-                    </div>
-                    <div class="stat-card moderate">
+                    </a>
+                    <a href="#moderate-risk-section" class="stat-card moderate" onclick="scrollToRisk('moderate'); return false;">
                         <div>⚡ MODERATE RISK</div>
                         <div class="stat-number">{risk_summary['MODERATE']}</div>
                         <div>variant(s)</div>
-                    </div>
-                    <div class="stat-card low">
+                    </a>
+                    <a href="#low-risk-section" class="stat-card low" onclick="scrollToRisk('low'); return false;">
                         <div>✓ LOW RISK</div>
                         <div class="stat-number">{risk_summary['LOW']}</div>
                         <div>variant(s)</div>
-                    </div>
+                    </a>
                 </div>
             </div>
             
@@ -446,6 +566,109 @@ def generate_html_report(vcf_path: Path) -> str:
                 </p>
             </div>
         </div>
+        
+        <!-- Floating Action Button -->
+        <div class="fab-container">
+            <div class="fab-menu">
+                <div class="fab-menu-item" onclick="shareReport()">
+                    <span class="icon">🔗</span>
+                    <span>Share Link</span>
+                </div>
+                <div class="fab-menu-item" onclick="downloadPDF()">
+                    <span class="icon">📥</span>
+                    <span>Download PDF</span>
+                </div>
+                <div class="fab-menu-item" onclick="window.print()">
+                    <span class="icon">🖨️</span>
+                    <span>Print</span>
+                </div>
+            </div>
+            <button class="fab-button">
+                ⚙️
+                <span class="tooltip">Actions</span>
+            </button>
+        </div>
+        
+        <script>
+            // Scroll to risk level variants
+            function scrollToRisk(riskLevel) {{
+                const variants = document.querySelectorAll(`[data-risk="${{riskLevel}}"]`);
+                if (variants.length > 0) {{
+                    variants[0].scrollIntoView({{ behavior: 'smooth', block: 'center' }});
+                    // Highlight effect
+                    variants.forEach(variant => {{
+                        variant.style.animation = 'highlight 1s ease';
+                        setTimeout(() => {{
+                            variant.style.animation = '';
+                        }}, 1000);
+                    }});
+                }}
+            }}
+            
+            // Share report - copy URL to clipboard
+            function shareReport() {{
+                const shareURL = window.location.href;
+                navigator.clipboard.writeText(shareURL).then(() => {{
+                    showNotification('✅ Link copied to clipboard!');
+                }}).catch(() => {{
+                    showNotification('❌ Failed to copy link');
+                }});
+            }}
+            
+            // Download as PDF
+            function downloadPDF() {{
+                // Use browser's print to PDF functionality
+                showNotification('💡 Use Print → Save as PDF');
+                setTimeout(() => {{
+                    window.print();
+                }}, 500);
+            }}
+            
+            // Show notification
+            function showNotification(message) {{
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+                    color: white;
+                    padding: 15px 25px;
+                    border-radius: 10px;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                    z-index: 10000;
+                    font-weight: 500;
+                    animation: slideIn 0.3s ease;
+                `;
+                notification.textContent = message;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {{
+                    notification.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => {{
+                        document.body.removeChild(notification);
+                    }}, 300);
+                }}, 3000);
+            }}
+            
+            // Add CSS animations
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes highlight {{
+                    0%, 100% {{ transform: scale(1); box-shadow: 0 3px 15px rgba(0,0,0,0.1); }}
+                    50% {{ transform: scale(1.02); box-shadow: 0 8px 30px rgba(255, 107, 53, 0.4); }}
+                }}
+                @keyframes slideIn {{
+                    from {{ transform: translateX(400px); opacity: 0; }}
+                    to {{ transform: translateX(0); opacity: 1; }}
+                }}
+                @keyframes slideOut {{
+                    from {{ transform: translateX(0); opacity: 1; }}
+                    to {{ transform: translateX(400px); opacity: 0; }}
+                }}
+            `;
+            document.head.appendChild(style);
+        </script>
     </body>
     </html>
     '''
