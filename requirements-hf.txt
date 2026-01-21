@@ -1,0 +1,3 @@
+# HuggingFace Spaces Requirements
+gradio>=4.0.0
+pandas>=2.0.0
