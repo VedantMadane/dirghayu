@@ -7,9 +7,18 @@ from .nutrient_predictor import (
     NUTRIENT_GENES
 )
 
+from .pharmacogenomics import (
+    PharmacogenomicsAnalyzer,
+    DrugRecommendation,
+    MetabolizerStatus
+)
+
 __all__ = [
     'NutrientPredictor',
     'NutrientDeficiencyModel',
     'NutrientFeatureExtractor',
-    'NUTRIENT_GENES'
+    'NUTRIENT_GENES',
+    'PharmacogenomicsAnalyzer',
+    'DrugRecommendation',
+    'MetabolizerStatus'
 ]
