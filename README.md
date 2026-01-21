@@ -1,8 +1,8 @@
 ---
 title: Dirghayu
 emoji: 🧬
-colorFrom: orange
-colorTo: red
+colorFrom: red
+colorTo: yellow
 sdk: gradio
 sdk_version: 4.0.0
 app_file: app_hf.py
