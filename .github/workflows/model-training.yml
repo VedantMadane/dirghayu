@@ -1,0 +1,86 @@
+name: Train Models
+
+# Run on schedule or manual trigger
+on:
+  workflow_dispatch:  # Manual trigger
+    inputs:
+      model_type:
+        description: 'Model to train'
+        required: true
+        default: 'nutrient'
+        type: choice
+        options:
+          - nutrient
+          - pharmacogenomics
+          - longevity
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday
+
+jobs:
+  train-cpu:
+    name: Train Model (CPU)
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install uv
+      run: curl -LsSf https://astral.sh/uv/install.sh | sh
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+    
+    - name: Install dependencies
+      run: |
+        export PATH="$HOME/.cargo/bin:$PATH"
+        uv pip install --system -r requirements.txt
+    
+    - name: Download sample data
+      run: python scripts/download_data.py
+    
+    - name: Train nutrient deficiency model
+      run: |
+        python -c "
+        from src.models import NutrientPredictor
+        from src.data import parse_vcf_file
+        
+        print('Training nutrient deficiency predictor...')
+        predictor = NutrientPredictor()
+        
+        # Train on synthetic data (demo)
+        variants_df = parse_vcf_file('data/sample.vcf')
+        predictor.train(variants_df, None, epochs=10)
+        predictor.save('models/nutrient_predictor.pth')
+        
+        print('✓ Model trained!')
+        "
+    
+    - name: Upload trained model
+      uses: actions/upload-artifact@v4
+      with:
+        name: trained-models
+        path: models/*.pth
+        retention-days: 30
+
+  # CLOUD DEPLOYMENT - NOT RUN WITHOUT GCP CREDENTIALS
+  # train-gpu:
+  #   name: Train Model (GCP GPU)
+  #   runs-on: ubuntu-latest
+  #   if: github.event_name == 'workflow_dispatch'
+  #   
+  #   steps:
+  #   - uses: actions/checkout@v4
+  #   
+  #   - name: Authenticate to GCP
+  #     uses: google-github-actions/auth@v2
+  #     with:
+  #       credentials_json: ${{ secrets.GCP_SA_KEY }}
+  #   
+  #   - name: Submit training job to GCP
+  #     run: |
+  #       gcloud ai custom-jobs create \
+  #         --region=asia-southeast1 \
+  #         --display-name=dirghayu-training \
+  #         --worker-pool-spec=machine-type=n1-standard-4,accelerator-type=NVIDIA_TESLA_T4,accelerator-count=1,replica-count=1,container-image-uri=gcr.io/dirghayu/training:latest

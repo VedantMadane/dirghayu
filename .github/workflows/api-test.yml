@@ -1,0 +1,71 @@
+name: API Integration Tests
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/api/**'
+      - 'src/models/**'
+      - 'src/data/**'
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  api-test:
+    name: Test API Endpoints
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install uv
+      run: curl -LsSf https://astral.sh/uv/install.sh | sh
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+    
+    - name: Install dependencies
+      run: |
+        export PATH="$HOME/.cargo/bin:$PATH"
+        uv pip install --system -r requirements.txt
+        uv pip install --system httpx pytest-asyncio
+    
+    - name: Create sample data
+      run: python scripts/download_data.py
+    
+    - name: Start API server (background)
+      run: |
+        python src/api/server.py &
+        sleep 5  # Wait for server to start
+        echo "API_PID=$!" >> $GITHUB_ENV
+    
+    - name: Test health endpoint
+      run: |
+        curl -f http://localhost:8000/ || exit 1
+        echo "✓ Health check passed"
+    
+    - name: Test variant annotation endpoint
+      run: |
+        curl -f -X POST http://localhost:8000/api/v1/annotate/variant \
+          -H "Content-Type: application/json" \
+          -d '{"chrom":"1","pos":11856378,"ref":"C","alt":"T"}' \
+          || exit 1
+        echo "✓ Variant annotation endpoint working"
+    
+    - name: Test OpenAPI spec generation
+      run: |
+        curl -f http://localhost:8000/openapi.json > openapi.json
+        cat openapi.json | jq . > /dev/null || exit 1
+        echo "✓ OpenAPI spec valid JSON"
+    
+    - name: Upload OpenAPI spec
+      uses: actions/upload-artifact@v4
+      with:
+        name: openapi-spec
+        path: openapi.json
+    
+    - name: Stop API server
+      if: always()
+      run: kill $API_PID || true
