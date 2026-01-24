@@ -7,6 +7,7 @@ sdk: gradio
 sdk_version: 4.0.0
 app_file: app_hf.py
 pinned: false
+python_version: "3.12"
 ---
 
 # Dirghayu - India-First Longevity Genomics Platform
