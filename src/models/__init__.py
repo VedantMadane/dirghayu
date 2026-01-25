@@ -13,6 +13,11 @@ from .pharmacogenomics import (
     MetabolizerStatus
 )
 
+from .lifespan_net import LifespanNetIndia, load_lifespan_model
+from .disease_net import DiseaseNetMulti, load_disease_model
+from .explainability import ExplainabilityManager
+from .gene_expression import BacktrackingEngine
+
 __all__ = [
     'NutrientPredictor',
     'NutrientDeficiencyModel',
@@ -20,5 +25,11 @@ __all__ = [
     'NUTRIENT_GENES',
     'PharmacogenomicsAnalyzer',
     'DrugRecommendation',
-    'MetabolizerStatus'
+    'MetabolizerStatus',
+    'LifespanNetIndia',
+    'load_lifespan_model',
+    'DiseaseNetMulti',
+    'load_disease_model',
+    'ExplainabilityManager',
+    'BacktrackingEngine'
 ]

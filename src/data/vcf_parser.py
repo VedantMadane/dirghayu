@@ -89,6 +89,56 @@ class VCFParser:
         else:
             yield from self._parse_basic(sample_id)
     
+    def parse_chunks(self, sample_id: Optional[str] = None, chunk_size: int = 10000) -> Iterator[pd.DataFrame]:
+        """
+        Parse VCF file and yield pandas DataFrames in chunks.
+        Efficient for processing large WGS files.
+
+        Args:
+            sample_id: Which sample to extract genotypes for
+            chunk_size: Number of variants per chunk
+
+        Yields:
+            DataFrame chunks
+        """
+        buffer = []
+
+        for variant in self.parse(sample_id):
+            buffer.append(variant)
+
+            if len(buffer) >= chunk_size:
+                yield self._variants_to_df(buffer)
+                buffer = []
+
+        # Yield remaining
+        if buffer:
+            yield self._variants_to_df(buffer)
+
+    def _variants_to_df(self, variants: List[Variant]) -> pd.DataFrame:
+        """Convert list of variants to DataFrame"""
+        if not variants:
+            return pd.DataFrame()
+
+        data = {
+            'chrom': [v.chrom for v in variants],
+            'pos': [v.pos for v in variants],
+            'rsid': [v.rsid for v in variants],
+            'ref': [v.ref for v in variants],
+            'alt': [v.alt for v in variants],
+            'genotype': [v.genotype for v in variants],
+            'allele_count': [v.allele_count for v in variants],
+            'qual': [v.qual for v in variants],
+            'filter': [v.filter for v in variants],
+        }
+
+        # Add INFO fields as separate columns (sparse)
+        # We check the first variant for keys, which is imperfect but fast
+        if variants[0].info:
+            for key in variants[0].info.keys():
+                data[f'info_{key}'] = [v.info.get(key) for v in variants]
+
+        return pd.DataFrame(data)
+
     def _parse_with_cyvcf2(self, sample_id: Optional[str]) -> Iterator[Variant]:
         """Fast parsing with cyvcf2"""
         vcf = VCF(str(self.vcf_path))
@@ -120,8 +170,16 @@ class VCFParser:
             # Parse INFO field
             info_dict = {}
             if variant.INFO:
-                for key in variant.INFO:
-                    info_dict[key] = variant.INFO.get(key)
+                try:
+                    for key in variant.INFO:
+                        try:
+                            val = variant.INFO.get(key)
+                            info_dict[key] = val
+                        except Exception:
+                            # Skip fields that cause parsing errors
+                            pass
+                except Exception:
+                    pass
             
             yield Variant(
                 chrom=variant.CHROM,
@@ -209,34 +267,14 @@ class VCFParser:
     
     def to_dataframe(self, sample_id: Optional[str] = None) -> pd.DataFrame:
         """
-        Parse VCF and return as pandas DataFrame
+        Parse VCF and return as pandas DataFrame (loads all into memory).
+        Use parse_chunks() for large files.
         
         Returns:
             DataFrame with columns: chrom, pos, rsid, ref, alt, genotype, etc.
         """
         variants = list(self.parse(sample_id))
-        
-        if not variants:
-            return pd.DataFrame()
-        
-        data = {
-            'chrom': [v.chrom for v in variants],
-            'pos': [v.pos for v in variants],
-            'rsid': [v.rsid for v in variants],
-            'ref': [v.ref for v in variants],
-            'alt': [v.alt for v in variants],
-            'genotype': [v.genotype for v in variants],
-            'allele_count': [v.allele_count for v in variants],
-            'qual': [v.qual for v in variants],
-            'filter': [v.filter for v in variants],
-        }
-        
-        # Add INFO fields as separate columns
-        if variants[0].info:
-            for key in variants[0].info.keys():
-                data[f'info_{key}'] = [v.info.get(key) for v in variants]
-        
-        return pd.DataFrame(data)
+        return self._variants_to_df(variants)
 
 
 def parse_vcf_file(vcf_path: Path, sample_id: Optional[str] = None) -> pd.DataFrame:
@@ -267,14 +305,18 @@ if __name__ == "__main__":
     
     print(f"Parsing VCF: {vcf_file}")
     
-    df = parse_vcf_file(vcf_file, sample_id)
+    # Test streaming
+    parser = VCFParser(vcf_file)
+    chunk_count = 0
+    total_variants = 0
     
-    print(f"\n✓ Parsed {len(df)} variants")
-    print("\nFirst 10 variants:")
-    print(df.head(10))
-    
-    print("\nGenotype distribution:")
-    print(df['genotype'].value_counts())
-    
-    print("\nAllele count distribution:")
-    print(df['allele_count'].value_counts())
+    print("Streaming chunks...")
+    for chunk in parser.parse_chunks(sample_id, chunk_size=10):
+        chunk_count += 1
+        total_variants += len(chunk)
+        print(f"  Chunk {chunk_count}: {len(chunk)} variants")
+        if chunk_count >= 5:
+            print("  (Stopping demo after 5 chunks)")
+            break
+
+    print(f"\nTotal variants processed: {total_variants}")
