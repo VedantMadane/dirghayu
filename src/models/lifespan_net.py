@@ -14,9 +14,9 @@ class LifespanNetIndia(nn.Module):
     def __init__(
         self,
         genomic_dim: int = 50,
-        clinical_dim: int = 30,
+        clinical_dim: int = 100,  # Updated to 100 biomarkers
         lifestyle_dim: int = 10,
-        hidden_dim: int = 128
+        hidden_dim: int = 256  # Increased hidden dim
     ):
         super().__init__()
 

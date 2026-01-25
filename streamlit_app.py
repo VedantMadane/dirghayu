@@ -25,6 +25,7 @@ from data.vcf_parser import VCFParser
 from models.lifespan_net import load_lifespan_model
 from models.disease_net import load_disease_model
 from models.explainability import ExplainabilityManager
+from data.biomarkers import get_biomarker_names, generate_synthetic_clinical_data
 
 # Page config
 st.set_page_config(
@@ -96,6 +97,11 @@ bmi = st.sidebar.slider("BMI", 15.0, 40.0, 24.5)
 diet_score = st.sidebar.slider("Diet Quality (0-10)", 0, 10, 7)
 exercise = st.sidebar.selectbox("Exercise Frequency", ["None", "1-2 times/week", "3-5 times/week", "Daily"])
 
+# Clinical Data Upload
+st.sidebar.divider()
+st.sidebar.subheader("🩸 Clinical Data")
+clinical_file = st.sidebar.file_uploader("Upload 100-Marker Panel (CSV)", type=['csv'])
+
 # Load Models (Cached)
 @st.cache_resource
 def load_models():
@@ -104,12 +110,9 @@ def load_models():
     explainer = ExplainabilityManager()
 
     # Setup dummy background for SHAP
-    # In production, use real training samples
     dummy_genomic = torch.randint(0, 3, (100, 100)).float()
-    dummy_clinical = torch.randn(100, 20)
+    dummy_clinical = torch.randn(100, 100) # Updated to 100
 
-    # Initialize explainers (using dummy data for setup)
-    # Ideally, we setup specific explainers per model, but for demo we create on fly
     return lifespan_model, disease_model, explainer
 
 lifespan_model, disease_model, explainer = load_models()
@@ -136,36 +139,64 @@ if uploaded_file is not None:
             
             # For demo/analysis, we'll process the first chunk to get stats
             # and simulate the feature vectors (since we don't have the full variant->feature map yet)
-            first_chunk = next(parser.parse_chunks(chunk_size=1000))
-            total_variants = 0
-            
-            # Count variants (rough scan)
-            for chunk in parser.parse_chunks(chunk_size=50000):
-                total_variants += len(chunk)
+            try:
+                first_chunk = next(parser.parse_chunks(chunk_size=1000))
+                total_variants = 0
+                # Count variants (rough scan)
+                for chunk in parser.parse_chunks(chunk_size=50000):
+                    total_variants += len(chunk)
+
+                # Mock seed from variants
+                seed = int(first_chunk['pos'].sum() % 10000)
+            except StopIteration:
+                st.warning("VCF file seems empty or invalid.")
+                total_variants = 0
+                seed = 42
 
             st.success(f"✅ Successfully analyzed {total_variants} variants from WGS data!")
 
             # --- PREPARE INPUTS FOR AI MODELS ---
-            # Mock Feature Extraction:
-            # In a real app, we would map specific variants to the input tensors.
-            # Here we use hashing to make it deterministic based on the VCF content.
-
-            seed = int(first_chunk['pos'].sum() % 10000)
             torch.manual_seed(seed)
+            np.random.seed(seed)
 
-            # 1. Lifespan Inputs
+            # 1. Genomic Inputs
             g_lifespan = torch.randint(0, 3, (1, 50)).float()
-            c_lifespan = torch.randn(1, 30) # Derived from age, bmi etc + random
-            l_lifespan = torch.tensor([[diet_score/10.0, 1.0 if exercise == "Daily" else 0.5] + [0.5]*8])
-
-            # 2. Disease Inputs
             g_disease = torch.randint(0, 3, (1, 100)).float()
-            c_disease = torch.randn(1, 20)
+
+            # 2. Clinical Inputs (100 Biomarkers)
+            if clinical_file:
+                # Process uploaded CSV
+                try:
+                    df = pd.read_csv(clinical_file)
+                    # Mapping logic would go here
+                    # For demo, we just check if it has enough columns or pad it
+                    st.sidebar.success("Clinical data loaded!")
+                    # Just taking first row or creating tensor
+                    c_input = torch.tensor(df.iloc[0, :100].values).float().unsqueeze(0)
+                    if c_input.shape[1] < 100:
+                         c_input = torch.cat([c_input, torch.zeros(1, 100 - c_input.shape[1])], dim=1)
+                except Exception as e:
+                    st.sidebar.error(f"Error loading CSV: {e}")
+                    c_input = None
+            else:
+                c_input = None
+
+            if c_input is None:
+                # Use synthetic healthy baseline
+                clinical_data = generate_synthetic_clinical_data(1)
+                clinical_vals = np.array([clinical_data[m][0] for m in get_biomarker_names()])
+                # Simple normalization (mock)
+                c_norm = (clinical_vals - 100) / 50.0
+                c_input = torch.tensor(c_norm).float().unsqueeze(0)
+                st.info("ℹ️ Using synthetic clinical profile (no file uploaded). Upload CSV for personalized 100-marker analysis.")
+
+            # 3. Lifestyle Inputs
+            l_lifespan = torch.tensor([[diet_score/10.0, 1.0 if exercise == "Daily" else 0.5] + [0.5]*8])
 
             # --- RUN INFERENCE ---
             with torch.no_grad():
-                lifespan_preds = lifespan_model(g_lifespan, c_lifespan, l_lifespan)
-                disease_preds = disease_model(g_disease, c_disease)
+                lifespan_preds = lifespan_model(g_lifespan, c_input, l_lifespan)
+                disease_preds = disease_model(g_disease, c_input)
 
             # --- DISPLAY RESULTS ---
 
@@ -207,17 +238,24 @@ if uploaded_file is not None:
             # --- EXPLAINABILITY & BACKTRACKING ---
             st.header("🔍 Deep Analysis & Explainability")
 
-            tab1, tab2 = st.tabs(["🧬 Explainability (SHAP)", "🔄 Backtracking & Insights"])
+            tab1, tab2, tab3 = st.tabs(["🧬 Explainability (SHAP)", "🔄 Backtracking & Insights", "🩸 100 Biomarker Panel"])
 
             with tab1:
                 st.write("### What drove these predictions?")
-                st.info("SHAP values show which genetic and lifestyle factors contributed most to your risk scores.")
+                st.info("SHAP values show which genetic, lifestyle, and clinical factors contributed most to your risk scores.")
+
+                # Input for explanation (Genomic + Clinical)
+                # Feature names: g_0...g_99 + Clinical names
+                genomic_names = [f"Var_{i}" for i in range(100)]
+                clinical_names = get_biomarker_names()
+                all_feature_names = genomic_names + clinical_names
+
+                input_tensor = torch.cat([g_disease, c_input], dim=1)
 
                 # Run SHAP explanation on Disease Model
-                explainer.setup_shap(disease_model.shared_encoder, torch.cat([g_disease, c_disease], dim=1))
+                explainer.setup_shap(disease_model.shared_encoder, input_tensor)
                 
-                # We explain the embedding layer for simplicity in this demo
-                explanation = explainer.explain_prediction(torch.cat([g_disease, c_disease], dim=1))
+                explanation = explainer.explain_prediction(input_tensor, feature_names=all_feature_names)
                 
                 if "shap_values" in explanation:
                     # Plot top features
@@ -236,18 +274,15 @@ if uploaded_file is not None:
             with tab2:
                 st.write("### 🔄 Backtracking: Precaution to Gene Expression")
                 st.markdown("Understand how lifestyle changes affect your gene expression to reduce risk.")
-                
-                # Get high risk items
+
                 high_risks = {k: v for k, v in risks.items() if v > 0.4}
-                
                 if not high_risks:
-                    st.success("🎉 You have low risk for all tracked diseases! Keep up the good work.")
-                
+                    st.success("🎉 You have low risk for all tracked diseases!")
+
                 insights = explainer.get_backtracking_insights(high_risks)
 
                 for disease, precautions in insights.items():
                     st.subheader(f"Recommendations for {disease}")
-
                     for p in precautions:
                         with st.expander(f"💊 Precaution: {p['precaution']}"):
                             c1, c2 = st.columns([1, 2])
@@ -256,14 +291,10 @@ if uploaded_file is not None:
                                 st.write(p['mechanism'])
                                 st.write("**Clinical Benefit:**")
                                 st.write(p['clinical_benefit'])
-
                             with c2:
                                 st.write("**Gene Expression Effect:**")
-                                # Visualizing gene expression change
                                 genes = p['target_genes']
                                 effect = p['expression_effect']
-
-                                # Mock chart
                                 fig, ax = plt.subplots(figsize=(6, 2))
                                 vals = [1.5 if effect == "Upregulated" else 0.5 for _ in genes]
                                 colors = ['green' if v > 1 else 'red' for v in vals]
@@ -271,7 +302,23 @@ if uploaded_file is not None:
                                 ax.axhline(1.0, color='gray', linestyle='--', label="Baseline")
                                 ax.set_ylabel("Expression Level")
                                 st.pyplot(fig)
-                                st.caption(f"This intervention {effect.lower()}s these key genes.")
+
+            with tab3:
+                st.write("### 🩸 Comprehensive Biomarker Panel")
+                st.write("Overview of the 100 clinical markers used in the analysis.")
+
+                # Show the biomarkers (either loaded or synthetic)
+                # Denormalize for display (rough approximation)
+                clinical_raw = c_input.numpy()[0] * 50 + 100
+
+                # Create DataFrame
+                bio_df = pd.DataFrame({
+                    "Biomarker": get_biomarker_names(),
+                    "Value": clinical_raw,
+                    "Unit": ["mg/dL" if "Cholesterol" in x or "Glucose" in x else "units" for x in get_biomarker_names()]
+                })
+
+                st.dataframe(bio_df, use_container_width=True, height=400)
 
             # Clean up temp file
             if temp_path.exists():
@@ -286,14 +333,13 @@ else:
     st.info("""
     ### 📝 How to use:
     1. Upload your VCF (Variant Call Format) file (WGS supported)
-    2. Wait for AI analysis to complete
-    3. Review your personalized genetic insights
+    2. (Optional) Upload Clinical CSV with 100 biomarkers
+    3. Wait for AI analysis to complete
     
     ### 🧬 New in v2.0
+    - **100-Marker Panel**: Comprehensive analysis of lipids, hormones, vitamins, etc.
     - **Whole Genome Support**: Streamed processing for large files.
     - **AI Models**: Neural networks for disease prediction.
-    - **Explainability**: See exactly *why* a risk was predicted.
-    - **Backtracking**: Trace precautions back to gene expression changes.
     """)
 
 # Footer

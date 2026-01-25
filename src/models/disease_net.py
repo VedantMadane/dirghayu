@@ -15,8 +15,8 @@ class DiseaseNetMulti(nn.Module):
     def __init__(
         self,
         genomic_dim: int = 100,  # PRS scores + key variants
-        clinical_dim: int = 20,
-        hidden_dim: int = 128
+        clinical_dim: int = 100,  # Updated to 100 biomarkers
+        hidden_dim: int = 256
     ):
         super().__init__()
 

@@ -20,6 +20,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 from src.models.lifespan_net import LifespanNetIndia
 from src.models.disease_net import DiseaseNetMulti
 from src.data.dataset import GenomicBigDataset
+from src.data.biomarkers import get_biomarker_names, generate_synthetic_clinical_data
 
 MODELS_DIR = Path("models")
 MODELS_DIR.mkdir(exist_ok=True)
@@ -29,7 +30,7 @@ def train_lifespan_model(data_dir=None):
 
     # Hyperparams
     GENOMIC_DIM = 50
-    CLINICAL_DIM = 30
+    CLINICAL_DIM = 100 # Updated to 100
     LIFESTYLE_DIM = 10
     EPOCHS = 50
     BATCH_SIZE = 1024
@@ -44,7 +45,6 @@ def train_lifespan_model(data_dir=None):
         # Define features mapping
         feature_cols = [f"g_{i}" for i in range(GENOMIC_DIM)]
         # We assume dataset returns dict with 'genomic', 'clinical', 'lifestyle', 'targets' keys
-        # For simplicity in this demo, we assume the dataset handles formatting or we adapt loop
         dataset = GenomicBigDataset(
             data_dir,
             feature_cols=feature_cols,
@@ -56,13 +56,11 @@ def train_lifespan_model(data_dir=None):
             total_loss = 0
             count = 0
             for batch in loader:
-                # Mock adaptation: real dataset needs specific columns
-                # For now, we assume the dataset yields correct tensors or we skip if cols missing
-                # This is a template for the user to map their specific parquet schema
-
-                # Using synthetic clinical/lifestyle for demo if missing in parquet
                 bs = batch["genomic"].shape[0]
                 genomic = batch["genomic"]
+
+                # Mock clinical data if missing
+                # In real scenario, this would come from the parquet file
                 clinical = torch.randn(bs, CLINICAL_DIM)
                 lifestyle = torch.rand(bs, LIFESTYLE_DIM)
                 target = batch["targets"]["lifespan"]
@@ -83,7 +81,16 @@ def train_lifespan_model(data_dir=None):
         # Synthetic Data
         N_SAMPLES = 1000
         genomic = torch.randint(0, 3, (N_SAMPLES, GENOMIC_DIM)).float()
-        clinical = torch.randn(N_SAMPLES, CLINICAL_DIM)
+
+        # Use our new biomarker generator
+        clinical_dict = generate_synthetic_clinical_data(N_SAMPLES)
+        clinical_array = np.array([clinical_dict[m] for m in get_biomarker_names()]).T # [N, 100]
+        # Normalize simple standard scaler mock
+        clinical_mean = clinical_array.mean(axis=0)
+        clinical_std = clinical_array.std(axis=0) + 1e-6
+        clinical_norm = (clinical_array - clinical_mean) / clinical_std
+        clinical = torch.tensor(clinical_norm).float()
+
         lifestyle = torch.rand(N_SAMPLES, LIFESTYLE_DIM)
 
         base_score = (
@@ -112,7 +119,7 @@ def train_disease_model(data_dir=None):
 
     # Hyperparams
     GENOMIC_DIM = 100
-    CLINICAL_DIM = 20
+    CLINICAL_DIM = 100 # Updated to 100
     EPOCHS = 50
     BATCH_SIZE = 1024
 
@@ -165,9 +172,16 @@ def train_disease_model(data_dir=None):
         # Synthetic Data
         N_SAMPLES = 1000
         genomic = torch.randint(0, 3, (N_SAMPLES, GENOMIC_DIM)).float()
-        clinical = torch.randn(N_SAMPLES, CLINICAL_DIM)
 
-        risk_score = (genomic[:, :10].sum(dim=1) + clinical[:, :5].sum(dim=1))
+        # Use our new biomarker generator
+        clinical_dict = generate_synthetic_clinical_data(N_SAMPLES)
+        clinical_array = np.array([clinical_dict[m] for m in get_biomarker_names()]).T # [N, 100]
+        clinical_mean = clinical_array.mean(axis=0)
+        clinical_std = clinical_array.std(axis=0) + 1e-6
+        clinical_norm = (clinical_array - clinical_mean) / clinical_std
+        clinical = torch.tensor(clinical_norm).float()
+
+        risk_score = (genomic[:, :10].sum(dim=1) + clinical[:, :10].sum(dim=1))
         prob = torch.sigmoid(risk_score)
 
         cvd_target = (torch.rand(N_SAMPLES) < prob).float().unsqueeze(1)
