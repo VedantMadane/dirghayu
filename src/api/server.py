@@ -16,18 +16,19 @@ from pydantic import BaseModel, Field
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from data import VariantAnnotator, parse_vcf_file
-from models import NutrientPredictor
+# Lazy imports moved to functions/globals
+# from data import VariantAnnotator, parse_vcf_file
+# from models import NutrientPredictor
 
 
 # Pydantic models for request/response
 class VariantInput(BaseModel):
     """Single variant for annotation"""
 
-    chrom: str = Field(..., example="1", description="Chromosome")
-    pos: int = Field(..., example=11856378, description="Position")
-    ref: str = Field(..., example="C", description="Reference allele")
-    alt: str = Field(..., example="T", description="Alternate allele")
+    chrom: str = Field(..., description="Chromosome", json_schema_extra={"example": "1"})
+    pos: int = Field(..., description="Position", json_schema_extra={"example": 11856378})
+    ref: str = Field(..., description="Reference allele", json_schema_extra={"example": "C"})
+    alt: str = Field(..., description="Alternate allele", json_schema_extra={"example": "T"})
 
 
 class VariantAnnotationResponse(BaseModel):
@@ -93,26 +94,38 @@ app = FastAPI(
     },
 )
 
-# Global instances
-annotator = VariantAnnotator()
-nutrient_predictor = None  # Lazy load
+# Global instances (lazy loaded)
+_annotator = None
+_nutrient_predictor = None
+
+
+def get_annotator():
+    """Lazy load variant annotator"""
+    global _annotator
+    if _annotator is None:
+        from data import VariantAnnotator
+
+        _annotator = VariantAnnotator()
+    return _annotator
 
 
 def get_nutrient_predictor():
     """Lazy load nutrient predictor"""
-    global nutrient_predictor
+    global _nutrient_predictor
 
-    if nutrient_predictor is None:
+    if _nutrient_predictor is None:
+        from models import NutrientPredictor
+
         model_path = Path("models/nutrient_predictor.pth")
 
         if model_path.exists():
-            nutrient_predictor = NutrientPredictor(model_path)
+            _nutrient_predictor = NutrientPredictor(model_path)
         else:
             # Train on synthetic data if no model exists
-            nutrient_predictor = NutrientPredictor()
+            _nutrient_predictor = NutrientPredictor()
             print("⚠ No trained model found, using untrained model")
 
-    return nutrient_predictor
+    return _nutrient_predictor
 
 
 # API Endpoints
@@ -134,23 +147,9 @@ async def root():
 async def annotate_variant(variant: VariantInput):
     """
     Annotate a single genetic variant
-
-    Enriches with:
-    - Gene symbol and consequence
-    - Population frequencies (gnomAD)
-    - Protein-level changes
-
-    **Example:**
-    ```json
-    {
-        "chrom": "1",
-        "pos": 11856378,
-        "ref": "C",
-        "alt": "T"
-    }
-    ```
     """
     try:
+        annotator = get_annotator()
         annotation = annotator.annotate_variant(
             chrom=variant.chrom, pos=variant.pos, ref=variant.ref, alt=variant.alt
         )
@@ -176,16 +175,10 @@ async def annotate_variant(variant: VariantInput):
 async def predict_nutrients(vcf_file: UploadFile = File(...)):
     """
     Predict nutrient deficiency risks from VCF file
-
-    Upload a VCF file and receive predictions for:
-    - Vitamin B12 deficiency risk
-    - Vitamin D deficiency risk
-    - Iron deficiency risk
-    - Folate deficiency risk
-
-    Returns risk scores (0-1) and personalized recommendations.
     """
     try:
+        from data import parse_vcf_file
+
         # Save uploaded file temporarily
         with tempfile.NamedTemporaryFile(delete=False, suffix=".vcf") as tmp:
             content = await vcf_file.read()
@@ -196,6 +189,7 @@ async def predict_nutrients(vcf_file: UploadFile = File(...)):
         variants_df = parse_vcf_file(tmp_path)
 
         # Annotate
+        annotator = get_annotator()
         annotated_df = annotator.annotate_dataframe(variants_df)
 
         # Predict
@@ -229,16 +223,10 @@ async def predict_nutrients(vcf_file: UploadFile = File(...)):
 async def comprehensive_analysis(vcf_file: UploadFile = File(...), patient_id: str = "unknown"):
     """
     Comprehensive genomic analysis
-
-    Upload VCF and receive:
-    - Full variant annotation
-    - Nutrient deficiency predictions
-    - Key variant identification
-    - Risk summary
-
-    This is the main endpoint for complete health reports.
     """
     try:
+        from data import parse_vcf_file
+
         # Save uploaded file
         with tempfile.NamedTemporaryFile(delete=False, suffix=".vcf") as tmp:
             content = await vcf_file.read()
@@ -250,6 +238,7 @@ async def comprehensive_analysis(vcf_file: UploadFile = File(...), patient_id: s
         total_variants = len(variants_df)
 
         # Annotate
+        annotator = get_annotator()
         annotated_df = annotator.annotate_dataframe(variants_df)
         annotated_count = len(annotated_df)
 
