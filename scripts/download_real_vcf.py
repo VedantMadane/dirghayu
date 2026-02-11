@@ -9,12 +9,13 @@ from pathlib import Path
 DATA_DIR = Path(__file__).parent.parent / "data"
 DATA_DIR.mkdir(exist_ok=True)
 
+
 def download_clinvar_sample():
     """
     Download a small ClinVar VCF sample with clinically relevant variants
     """
     print("Creating clinically relevant sample VCF...")
-    
+
     # Create a realistic VCF with actual clinical variants
     vcf_content = """##fileformat=VCFv4.2
 ##fileDate=20260121
@@ -36,11 +37,11 @@ def download_clinvar_sample():
 9	133257521	rs1333049	G	C	100	PASS	RS=rs1333049;GENE=CDKN2B-AS1;AF=0.48;CLNSIG=risk_factor	GT:DP	1/1:41
 1	55039974	rs713598	G	C	100	PASS	RS=rs713598;GENE=TAS2R38;AF=0.45;CLNSIG=benign	GT:DP	0/1:36
 """
-    
+
     output_path = DATA_DIR / "clinvar_sample.vcf"
-    with open(output_path, 'w') as f:
+    with open(output_path, "w") as f:
         f.write(vcf_content)
-    
+
     print(f"[OK] Created sample VCF: {output_path}")
     print("\nVariants included:")
     print("  1. rs1801133 (MTHFR C677T) - Folate metabolism, heart disease risk")
@@ -48,8 +49,9 @@ def download_clinvar_sample():
     print("  3. rs1801131 (MTHFR A1298C) - Folate metabolism")
     print("  4. rs1333049 (CDKN2B-AS1) - Coronary artery disease risk")
     print("  5. rs713598 (TAS2R38) - Bitter taste perception")
-    
+
     return output_path
+
 
 if __name__ == "__main__":
     vcf_path = download_clinvar_sample()

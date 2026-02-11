@@ -10,13 +10,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 from typing import Dict, Optional
 
+
 class LifespanNetIndia(nn.Module):
     def __init__(
         self,
         genomic_dim: int = 50,
         clinical_dim: int = 100,  # Updated to 100 biomarkers
         lifestyle_dim: int = 10,
-        hidden_dim: int = 256  # Increased hidden dim
+        hidden_dim: int = 256,  # Increased hidden dim
     ):
         super().__init__()
 
@@ -26,7 +27,7 @@ class LifespanNetIndia(nn.Module):
             nn.LayerNorm(256),
             nn.ReLU(),
             nn.Dropout(0.3),
-            nn.Linear(256, hidden_dim)
+            nn.Linear(256, hidden_dim),
         )
 
         self.clinical_net = nn.Sequential(
@@ -34,23 +35,18 @@ class LifespanNetIndia(nn.Module):
             nn.LayerNorm(128),
             nn.ReLU(),
             nn.Dropout(0.2),
-            nn.Linear(128, hidden_dim)
+            nn.Linear(128, hidden_dim),
         )
 
         self.lifestyle_net = nn.Sequential(
-            nn.Linear(lifestyle_dim, 64),
-            nn.LayerNorm(64),
-            nn.ReLU(),
-            nn.Linear(64, hidden_dim)
+            nn.Linear(lifestyle_dim, 64), nn.LayerNorm(64), nn.ReLU(), nn.Linear(64, hidden_dim)
         )
 
         # 2. Attention Fusion
         # We concatenate features and attend to them
         self.fusion_dim = hidden_dim * 3
         self.attention = nn.MultiheadAttention(
-            embed_dim=self.fusion_dim,
-            num_heads=4,
-            batch_first=True
+            embed_dim=self.fusion_dim, num_heads=4, batch_first=True
         )
 
         # 3. Survival Analysis Head
@@ -60,14 +56,12 @@ class LifespanNetIndia(nn.Module):
             nn.Dropout(0.3),
             nn.Linear(128, 64),
             nn.ReLU(),
-            nn.Linear(64, 1)  # Predicted relative risk (log hazard)
+            nn.Linear(64, 1),  # Predicted relative risk (log hazard)
         )
 
         # 4. Biological Age Head (Auxiliary task)
         self.bio_age_head = nn.Sequential(
-            nn.Linear(self.fusion_dim, 64),
-            nn.ReLU(),
-            nn.Linear(64, 1)
+            nn.Linear(self.fusion_dim, 64), nn.ReLU(), nn.Linear(64, 1)
         )
 
         self.baseline_lifespan = 78.0  # Average target
@@ -107,8 +101,9 @@ class LifespanNetIndia(nn.Module):
             "predicted_lifespan": predicted_lifespan,
             "biological_age": bio_age,
             "relative_risk": relative_risk,
-            "embedding": fused
+            "embedding": fused,
         }
+
 
 def load_lifespan_model(path: str = "models/lifespan_net.pth") -> LifespanNetIndia:
     model = LifespanNetIndia()

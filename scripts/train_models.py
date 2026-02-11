@@ -25,12 +25,13 @@ from src.data.biomarkers import get_biomarker_names, generate_synthetic_clinical
 MODELS_DIR = Path("models")
 MODELS_DIR.mkdir(exist_ok=True)
 
+
 def train_lifespan_model(data_dir=None):
     print("Training LifespanNet-India...")
 
     # Hyperparams
     GENOMIC_DIM = 50
-    CLINICAL_DIM = 100 # Updated to 100
+    CLINICAL_DIM = 100  # Updated to 100
     LIFESTYLE_DIM = 10
     EPOCHS = 50
     BATCH_SIZE = 1024
@@ -46,9 +47,7 @@ def train_lifespan_model(data_dir=None):
         feature_cols = [f"g_{i}" for i in range(GENOMIC_DIM)]
         # We assume dataset returns dict with 'genomic', 'clinical', 'lifestyle', 'targets' keys
         dataset = GenomicBigDataset(
-            data_dir,
-            feature_cols=feature_cols,
-            target_cols={"lifespan": "age_death"}
+            data_dir, feature_cols=feature_cols, target_cols={"lifespan": "age_death"}
         )
         loader = DataLoader(dataset, batch_size=BATCH_SIZE)
 
@@ -75,7 +74,7 @@ def train_lifespan_model(data_dir=None):
                 count += 1
 
             avg_loss = total_loss / max(1, count)
-            print(f"  Epoch {epoch+1}/{EPOCHS}, Loss: {avg_loss:.4f}")
+            print(f"  Epoch {epoch + 1}/{EPOCHS}, Loss: {avg_loss:.4f}")
 
     else:
         # Synthetic Data
@@ -84,7 +83,7 @@ def train_lifespan_model(data_dir=None):
 
         # Use our new biomarker generator
         clinical_dict = generate_synthetic_clinical_data(N_SAMPLES)
-        clinical_array = np.array([clinical_dict[m] for m in get_biomarker_names()]).T # [N, 100]
+        clinical_array = np.array([clinical_dict[m] for m in get_biomarker_names()]).T  # [N, 100]
         # Normalize simple standard scaler mock
         clinical_mean = clinical_array.mean(axis=0)
         clinical_std = clinical_array.std(axis=0) + 1e-6
@@ -94,9 +93,7 @@ def train_lifespan_model(data_dir=None):
         lifestyle = torch.rand(N_SAMPLES, LIFESTYLE_DIM)
 
         base_score = (
-            genomic.mean(dim=1) * 0.5 +
-            clinical.mean(dim=1) * -0.5 +
-            lifestyle.mean(dim=1) * 2.0
+            genomic.mean(dim=1) * 0.5 + clinical.mean(dim=1) * -0.5 + lifestyle.mean(dim=1) * 2.0
         )
         lifespan_target = 78.0 + (base_score * 5.0) + torch.randn(N_SAMPLES)
 
@@ -107,19 +104,20 @@ def train_lifespan_model(data_dir=None):
             loss.backward()
             optimizer.step()
 
-            if (epoch+1) % 10 == 0:
-                print(f"  Epoch {epoch+1}/{EPOCHS}, Loss: {loss.item():.4f}")
+            if (epoch + 1) % 10 == 0:
+                print(f"  Epoch {epoch + 1}/{EPOCHS}, Loss: {loss.item():.4f}")
 
     # Save
     torch.save(model.state_dict(), MODELS_DIR / "lifespan_net.pth")
     print("✓ Saved lifespan_net.pth\n")
+
 
 def train_disease_model(data_dir=None):
     print("Training DiseaseNet-Multi...")
 
     # Hyperparams
     GENOMIC_DIM = 100
-    CLINICAL_DIM = 100 # Updated to 100
+    CLINICAL_DIM = 100  # Updated to 100
     EPOCHS = 50
     BATCH_SIZE = 1024
 
@@ -132,9 +130,7 @@ def train_disease_model(data_dir=None):
         print(f"Loading real data from {data_dir}...")
         feature_cols = [f"g_{i}" for i in range(GENOMIC_DIM)]
         dataset = GenomicBigDataset(
-            data_dir,
-            feature_cols=feature_cols,
-            target_cols={"cvd": "has_cvd", "t2d": "has_t2d"}
+            data_dir, feature_cols=feature_cols, target_cols={"cvd": "has_cvd", "t2d": "has_t2d"}
         )
         loader = DataLoader(dataset, batch_size=BATCH_SIZE)
 
@@ -149,7 +145,7 @@ def train_disease_model(data_dir=None):
                 # Mock targets
                 cvd_target = batch["targets"]["cvd"]
                 t2d_target = batch["targets"]["t2d"]
-                cancer_target = torch.zeros(bs, 4) # Placeholder
+                cancer_target = torch.zeros(bs, 4)  # Placeholder
 
                 optimizer.zero_grad()
                 outputs = model(genomic, clinical)
@@ -166,7 +162,7 @@ def train_disease_model(data_dir=None):
                 count += 1
 
             avg_loss = total_loss / max(1, count)
-            print(f"  Epoch {epoch+1}/{EPOCHS}, Loss: {avg_loss:.4f}")
+            print(f"  Epoch {epoch + 1}/{EPOCHS}, Loss: {avg_loss:.4f}")
 
     else:
         # Synthetic Data
@@ -175,13 +171,13 @@ def train_disease_model(data_dir=None):
 
         # Use our new biomarker generator
         clinical_dict = generate_synthetic_clinical_data(N_SAMPLES)
-        clinical_array = np.array([clinical_dict[m] for m in get_biomarker_names()]).T # [N, 100]
+        clinical_array = np.array([clinical_dict[m] for m in get_biomarker_names()]).T  # [N, 100]
         clinical_mean = clinical_array.mean(axis=0)
         clinical_std = clinical_array.std(axis=0) + 1e-6
         clinical_norm = (clinical_array - clinical_mean) / clinical_std
         clinical = torch.tensor(clinical_norm).float()
 
-        risk_score = (genomic[:, :10].sum(dim=1) + clinical[:, :10].sum(dim=1))
+        risk_score = genomic[:, :10].sum(dim=1) + clinical[:, :10].sum(dim=1)
         prob = torch.sigmoid(risk_score)
 
         cvd_target = (torch.rand(N_SAMPLES) < prob).float().unsqueeze(1)
@@ -201,12 +197,13 @@ def train_disease_model(data_dir=None):
             total_loss.backward()
             optimizer.step()
 
-            if (epoch+1) % 10 == 0:
-                print(f"  Epoch {epoch+1}/{EPOCHS}, Loss: {total_loss.item():.4f}")
+            if (epoch + 1) % 10 == 0:
+                print(f"  Epoch {epoch + 1}/{EPOCHS}, Loss: {total_loss.item():.4f}")
 
     # Save
     torch.save(model.state_dict(), MODELS_DIR / "disease_net.pth")
     print("✓ Saved disease_net.pth\n")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

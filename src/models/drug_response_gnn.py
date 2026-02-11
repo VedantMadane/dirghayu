@@ -10,6 +10,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from typing import Dict, List, Tuple
 
+
 class DrugGeneGNN(nn.Module):
     def __init__(self, num_genes: int = 1000, num_drugs: int = 500, embedding_dim: int = 64):
         super().__init__()
@@ -29,21 +30,20 @@ class DrugGeneGNN(nn.Module):
         # Prediction Heads
         # 1. Efficacy (0-1)
         self.efficacy_head = nn.Sequential(
-            nn.Linear(embedding_dim * 2, 64),
-            nn.ReLU(),
-            nn.Linear(64, 1),
-            nn.Sigmoid()
+            nn.Linear(embedding_dim * 2, 64), nn.ReLU(), nn.Linear(64, 1), nn.Sigmoid()
         )
 
         # 2. Toxicity / Adverse Event Probability (0-1)
         self.toxicity_head = nn.Sequential(
-            nn.Linear(embedding_dim * 2, 64),
-            nn.ReLU(),
-            nn.Linear(64, 1),
-            nn.Sigmoid()
+            nn.Linear(embedding_dim * 2, 64), nn.ReLU(), nn.Linear(64, 1), nn.Sigmoid()
         )
 
-    def forward(self, gene_indices: torch.Tensor, drug_indices: torch.Tensor, adjacency_matrix: torch.Tensor = None):
+    def forward(
+        self,
+        gene_indices: torch.Tensor,
+        drug_indices: torch.Tensor,
+        adjacency_matrix: torch.Tensor = None,
+    ):
         """
         Args:
             gene_indices: [batch_size] IDs of relevant genes (e.g., CYP2C19)
@@ -68,8 +68,9 @@ class DrugGeneGNN(nn.Module):
 
         return {
             "efficacy": self.efficacy_head(combined),
-            "toxicity_risk": self.toxicity_head(combined)
+            "toxicity_risk": self.toxicity_head(combined),
         }
+
 
 # Knowledge Base for Demo (Indices)
 DRUG_MAP = {
@@ -80,7 +81,7 @@ DRUG_MAP = {
     "Codeine": 4,
     "Aspirin": 5,
     "Ibuprofen": 6,
-    "Caffeine": 7
+    "Caffeine": 7,
 }
 
 GENE_MAP = {
@@ -90,10 +91,13 @@ GENE_MAP = {
     "SLCO1B1": 3,
     "SLC22A1": 4,
     "CYP2D6": 5,
-    "CYP1A2": 6
+    "CYP1A2": 6,
 }
 
-def predict_drug_response(drug_name: str, key_gene: str, variant_impact: float = 1.0) -> Dict[str, float]:
+
+def predict_drug_response(
+    drug_name: str, key_gene: str, variant_impact: float = 1.0
+) -> Dict[str, float]:
     """
     Wrapper to use the GNN for specific pairs.
     variant_impact: Modifier based on patient's specific genotype (e.g., 0.5 for poor metabolizer).
@@ -122,13 +126,13 @@ def predict_drug_response(drug_name: str, key_gene: str, variant_impact: float =
 
     if drug_name in prodrugs:
         final_efficacy = base_efficacy * variant_impact
-        final_toxicity = base_toxicity # Toxicity might be lower if not activated
+        final_toxicity = base_toxicity  # Toxicity might be lower if not activated
     else:
         # Active drugs (Warfarin) -> Low metabolism = High accumulation = High Toxicity
-        final_efficacy = base_efficacy # Works fine
-        final_toxicity = base_toxicity + (1.0 - variant_impact) * 0.5 # Increases risk
+        final_efficacy = base_efficacy  # Works fine
+        final_toxicity = base_toxicity + (1.0 - variant_impact) * 0.5  # Increases risk
 
     return {
         "efficacy": min(max(final_efficacy, 0.0), 1.0),
-        "toxicity_risk": min(max(final_toxicity, 0.0), 1.0)
+        "toxicity_risk": min(max(final_toxicity, 0.0), 1.0),
     }

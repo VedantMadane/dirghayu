@@ -11,12 +11,13 @@ import torch
 import torch.nn as nn
 from typing import Dict
 
+
 class DiseaseNetMulti(nn.Module):
     def __init__(
         self,
         genomic_dim: int = 100,  # PRS scores + key variants
         clinical_dim: int = 100,  # Updated to 100 biomarkers
-        hidden_dim: int = 256
+        hidden_dim: int = 256,
     ):
         super().__init__()
 
@@ -27,33 +28,27 @@ class DiseaseNetMulti(nn.Module):
             nn.ReLU(),
             nn.Dropout(0.3),
             nn.Linear(256, hidden_dim),
-            nn.ReLU()
+            nn.ReLU(),
         )
 
         # Task-Specific Heads
 
         # 1. CVD Head
         self.cvd_head = nn.Sequential(
-            nn.Linear(hidden_dim, 64),
-            nn.ReLU(),
-            nn.Linear(64, 1),
-            nn.Sigmoid()
+            nn.Linear(hidden_dim, 64), nn.ReLU(), nn.Linear(64, 1), nn.Sigmoid()
         )
 
         # 2. T2D Head
         self.t2d_head = nn.Sequential(
-            nn.Linear(hidden_dim, 64),
-            nn.ReLU(),
-            nn.Linear(64, 1),
-            nn.Sigmoid()
+            nn.Linear(hidden_dim, 64), nn.ReLU(), nn.Linear(64, 1), nn.Sigmoid()
         )
 
         # 3. Cancer Head (Multi-label: Breast, Colorectal, Prostate, Lung)
         self.cancer_head = nn.Sequential(
             nn.Linear(hidden_dim, 64),
             nn.ReLU(),
-            nn.Linear(64, 4), # 4 major types
-            nn.Sigmoid()
+            nn.Linear(64, 4),  # 4 major types
+            nn.Sigmoid(),
         )
 
     def forward(self, genomic: torch.Tensor, clinical: torch.Tensor) -> Dict[str, torch.Tensor]:
@@ -67,8 +62,9 @@ class DiseaseNetMulti(nn.Module):
         return {
             "cvd_risk": self.cvd_head(embedding),
             "t2d_risk": self.t2d_head(embedding),
-            "cancer_risks": self.cancer_head(embedding) # [breast, colorectal, prostate, lung]
+            "cancer_risks": self.cancer_head(embedding),  # [breast, colorectal, prostate, lung]
         }
+
 
 def load_disease_model(path: str = "models/disease_net.pth") -> DiseaseNetMulti:
     model = DiseaseNetMulti()

@@ -13,6 +13,9 @@ cyvcf2>=0.30.0  # Fast VCF parsing
 pysam>=0.21.0  # BAM/VCF handling
 biopython>=1.81  # Sequence analysis
 
+# Reporting
+fpdf>=1.7.2  # PDF Generation
+
 # Data storage (local-friendly)
 pyarrow>=13.0.0  # Parquet files
 duckdb>=0.9.0  # SQL on Parquet, no server
@@ -22,6 +25,7 @@ polars>=0.19.0  # Fast dataframes (Rust-based)
 fastapi>=0.104.0
 uvicorn>=0.24.0
 pydantic>=2.4.0
+python-multipart>=0.0.9  # Form data support
 
 # Utilities
 requests>=2.31.0

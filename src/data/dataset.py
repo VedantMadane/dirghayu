@@ -13,14 +13,15 @@ import numpy as np
 from pathlib import Path
 from typing import List, Optional, Iterator, Dict
 
+
 class GenomicBigDataset(IterableDataset):
     def __init__(
         self,
         data_dir: str,
         feature_cols: List[str],
-        target_cols: Dict[str, str], # {"lifespan": "age_death", "cvd": "has_cvd"}
+        target_cols: Dict[str, str],  # {"lifespan": "age_death", "cvd": "has_cvd"}
         batch_size: int = 1024,
-        shuffle_buffer_size: int = 10000
+        shuffle_buffer_size: int = 10000,
     ):
         """
         Args:
@@ -79,7 +80,7 @@ class GenomicBigDataset(IterableDataset):
                 for j in range(len(df)):
                     yield {
                         "genomic": torch.tensor(X[j]),
-                        "targets": {k: torch.tensor(v[j]) for k, v in targets.items()}
+                        "targets": {k: torch.tensor(v[j]) for k, v in targets.items()},
                     }
 
         except Exception as e:

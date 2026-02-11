@@ -7,12 +7,14 @@ Used for "Explainability & Backtracking" features.
 
 from typing import Dict, List, TypedDict
 
+
 class PrecautionImpact(TypedDict):
     precaution: str
     mechanism: str
     target_genes: List[str]
     expression_effect: str  # "Upregulated" or "Downregulated"
     clinical_benefit: str
+
 
 class BacktrackingEngine:
     def __init__(self):
@@ -24,15 +26,15 @@ class BacktrackingEngine:
                     "mechanism": "Polyphenols reduce oxidative stress",
                     "target_genes": ["PON1", "LDLR"],
                     "expression_effect": "Upregulated",
-                    "clinical_benefit": "Improved lipid clearance"
+                    "clinical_benefit": "Improved lipid clearance",
                 },
                 {
                     "precaution": "Aerobic Exercise",
                     "mechanism": "Shear stress on endothelium",
                     "target_genes": ["eNOS", "VEGF"],
                     "expression_effect": "Upregulated",
-                    "clinical_benefit": "Better vasodilation and blood pressure control"
-                }
+                    "clinical_benefit": "Better vasodilation and blood pressure control",
+                },
             ],
             "t2d": [
                 {
@@ -40,15 +42,15 @@ class BacktrackingEngine:
                     "mechanism": "Short-chain fatty acid production",
                     "target_genes": ["GLP1", "PYY"],
                     "expression_effect": "Upregulated",
-                    "clinical_benefit": "Enhanced insulin secretion"
+                    "clinical_benefit": "Enhanced insulin secretion",
                 },
                 {
                     "precaution": "Intermittent Fasting",
                     "mechanism": "AMPK activation pathway",
                     "target_genes": ["SIRT1", "PPARG"],
                     "expression_effect": "Modulated",
-                    "clinical_benefit": "Improved insulin sensitivity"
-                }
+                    "clinical_benefit": "Improved insulin sensitivity",
+                },
             ],
             "cancer": [
                 {
@@ -56,15 +58,15 @@ class BacktrackingEngine:
                     "mechanism": "Anti-inflammatory signaling inhibition",
                     "target_genes": ["NF-kB", "COX-2", "TNF-alpha"],
                     "expression_effect": "Downregulated",
-                    "clinical_benefit": "Reduced chronic inflammation and tumor promotion"
+                    "clinical_benefit": "Reduced chronic inflammation and tumor promotion",
                 },
                 {
                     "precaution": "Cruciferous Vegetables (Broccoli)",
                     "mechanism": "Sulforaphane pathway",
                     "target_genes": ["Nrf2", "GSTP1"],
                     "expression_effect": "Upregulated",
-                    "clinical_benefit": "Enhanced detoxification of carcinogens"
-                }
+                    "clinical_benefit": "Enhanced detoxification of carcinogens",
+                },
             ],
             "longevity": [
                 {
@@ -72,9 +74,9 @@ class BacktrackingEngine:
                     "mechanism": "mTOR inhibition",
                     "target_genes": ["mTOR", "IGF-1"],
                     "expression_effect": "Downregulated",
-                    "clinical_benefit": "Extended healthspan and cellular repair"
+                    "clinical_benefit": "Extended healthspan and cellular repair",
                 }
-            ]
+            ],
         }
 
     def backtrack_risk(self, disease_type: str) -> List[PrecautionImpact]:

@@ -14,6 +14,7 @@ from typing import Dict, List, Any
 import matplotlib.pyplot as plt
 from .gene_expression import BacktrackingEngine, PrecautionImpact
 
+
 class ExplainabilityManager:
     def __init__(self, background_samples: int = 100):
         self.backtracker = BacktrackingEngine()
@@ -35,7 +36,7 @@ class ExplainabilityManager:
 
         # Select background samples
         if len(input_data) > self.background_samples:
-            background = input_data[:self.background_samples]
+            background = input_data[: self.background_samples]
         else:
             background = input_data
 
@@ -48,9 +49,7 @@ class ExplainabilityManager:
             self.explainer = None
 
     def explain_prediction(
-        self,
-        input_tensor: torch.Tensor,
-        feature_names: List[str] = None
+        self, input_tensor: torch.Tensor, feature_names: List[str] = None
     ) -> Dict[str, Any]:
         """
         Compute SHAP values for a single prediction.
@@ -63,13 +62,13 @@ class ExplainabilityManager:
 
             # Handle list output (for multi-output models)
             if isinstance(shap_values, list):
-                shap_values = shap_values[0] # Take first output for simplicity
+                shap_values = shap_values[0]  # Take first output for simplicity
 
             # Create summary
             explanation = {
                 "shap_values": shap_values,
                 "feature_names": feature_names,
-                "top_features": self._get_top_features(shap_values, feature_names)
+                "top_features": self._get_top_features(shap_values, feature_names),
             }
 
             return explanation
@@ -94,7 +93,9 @@ class ExplainabilityManager:
 
         return top_feats
 
-    def get_backtracking_insights(self, disease_risks: Dict[str, float]) -> Dict[str, List[PrecautionImpact]]:
+    def get_backtracking_insights(
+        self, disease_risks: Dict[str, float]
+    ) -> Dict[str, List[PrecautionImpact]]:
         """
         Get backtracking insights for high-risk conditions.
 
@@ -116,7 +117,7 @@ class ExplainabilityManager:
                     "t2d_risk": "t2d",
                     "cancer_risks": "cancer",
                     "cardiovascular": "cvd",
-                    "diabetes": "t2d"
+                    "diabetes": "t2d",
                 }
 
                 kb_key = key_map.get(disease, disease)
