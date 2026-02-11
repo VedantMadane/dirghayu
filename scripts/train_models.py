@@ -5,22 +5,23 @@ Generates synthetic data OR loads real data to train the Dirghayu AI models.
 Produces .pth files for the Streamlit app.
 """
 
+import argparse
+import sys
+from pathlib import Path
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import numpy as np
-from pathlib import Path
-import sys
-import argparse
 from torch.utils.data import DataLoader
 
 # Add src to path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from src.models.lifespan_net import LifespanNetIndia
-from src.models.disease_net import DiseaseNetMulti
+from src.data.biomarkers import generate_synthetic_clinical_data, get_biomarker_names
 from src.data.dataset import GenomicBigDataset
-from src.data.biomarkers import get_biomarker_names, generate_synthetic_clinical_data
+from src.models.disease_net import DiseaseNetMulti
+from src.models.lifespan_net import LifespanNetIndia
 
 MODELS_DIR = Path("models")
 MODELS_DIR.mkdir(exist_ok=True)

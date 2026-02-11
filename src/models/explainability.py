@@ -6,12 +6,13 @@ Provides:
 2. Backtracking logic (Risk -> Precaution -> Gene Expression)
 """
 
-import torch
-import shap
-import numpy as np
-import pandas as pd
-from typing import Dict, List, Any
+from typing import Any, Dict, List
+
 import matplotlib.pyplot as plt
+import numpy as np
+import shap
+import torch
+
 from .gene_expression import BacktrackingEngine, PrecautionImpact
 
 

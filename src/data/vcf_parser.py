@@ -6,8 +6,9 @@ Uses cyvcf2 for fast parsing (C++ backend).
 """
 
 from dataclasses import dataclass
-from typing import List, Dict, Optional, Iterator
 from pathlib import Path
+from typing import Dict, Iterator, List, Optional
+
 import pandas as pd
 
 try:

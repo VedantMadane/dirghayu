@@ -9,12 +9,10 @@ Data sources:
 4. 1000 Genomes Project
 """
 
-import os
-import requests
 from pathlib import Path
+
+import requests
 from tqdm import tqdm
-import gzip
-import shutil
 
 # Data directory
 DATA_DIR = Path(__file__).parent.parent / "data"
@@ -75,9 +73,9 @@ def download_gnomad():
 
     # Download small example VCF for testing
     # Full gnomAD is ~1TB, use API or BigQuery for production
-    test_vcf_url = "https://gnomad-public-us-east-1.s3.amazonaws.com/release/4.0/vcf/genomes/gnomad.genomes.v4.0.sites.chr22.vcf.bgz"
+    # test_vcf_url = "https://gnomad-public-us-east-1.s3.amazonaws.com/release/4.0/vcf/genomes/gnomad.genomes.v4.0.sites.chr22.vcf.bgz"
 
-    dest = gnomad_dir / "gnomad_chr22_example.vcf.bgz"
+    # dest = gnomad_dir / "gnomad_chr22_example.vcf.bgz"
 
     print("[*] Downloading gnomAD chr22 example (for testing)...")
     print("[!] Full gnomAD is 1TB+. For production, use:")
@@ -98,8 +96,8 @@ def download_alphamissense():
     alphamissense_dir.mkdir(exist_ok=True)
 
     # AlphaMissense predictions (all possible missense variants)
-    url = "https://storage.googleapis.com/dm_alphamissense/AlphaMissense_hg38.tsv.gz"
-    dest = alphamissense_dir / "AlphaMissense_hg38.tsv.gz"
+    # url = "https://storage.googleapis.com/dm_alphamissense/AlphaMissense_hg38.tsv.gz"
+    # dest = alphamissense_dir / "AlphaMissense_hg38.tsv.gz"
 
     print("[*] Downloading AlphaMissense predictions...")
     print("[!] This is 900MB compressed, 5GB uncompressed")
@@ -118,7 +116,7 @@ def download_1000genomes_sample():
     kg_dir.mkdir(exist_ok=True)
 
     # Sample metadata
-    metadata_url = "https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000_genomes_project/1000genomes.sequence.index"
+    # metadata_url = "https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000_genomes_project/1000genomes.sequence.index"
 
     print("[*] Downloading 1000 Genomes metadata...")
     print("\nIndian populations:")

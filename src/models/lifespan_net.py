@@ -5,10 +5,9 @@ Multi-modal deep learning model to predict life expectancy and biological age
 based on genomics, clinical markers, and lifestyle factors.
 """
 
+
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from typing import Dict, Optional
 
 
 class LifespanNetIndia(nn.Module):
@@ -110,6 +109,6 @@ def load_lifespan_model(path: str = "models/lifespan_net.pth") -> LifespanNetInd
     try:
         model.load_state_dict(torch.load(path, map_location="cpu"))
         model.eval()
-    except Exception as e:
+    except Exception:
         print(f"Warning: Could not load model from {path}. Using random weights.")
     return model

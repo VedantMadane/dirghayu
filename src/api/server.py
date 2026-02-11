@@ -5,18 +5,18 @@ FastAPI server that auto-generates OpenAPI 3.0 specification.
 Provides endpoints for genomic analysis and health predictions.
 """
 
-from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
-from typing import Dict, List, Optional
-from pathlib import Path
 import sys
 import tempfile
+from pathlib import Path
+from typing import Dict, List, Optional
+
+from fastapi import FastAPI, File, HTTPException, UploadFile
+from pydantic import BaseModel, Field
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from data import parse_vcf_file, VariantAnnotator
+from data import VariantAnnotator, parse_vcf_file
 from models import NutrientPredictor
 
 

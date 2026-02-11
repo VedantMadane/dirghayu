@@ -5,10 +5,11 @@ Predicts personalized drug response using a Graph Neural Network.
 Models the complex interplay between Drugs, Genes, and Protein interactions.
 """
 
+from typing import Dict
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Dict, List, Tuple
 
 
 class DrugGeneGNN(nn.Module):

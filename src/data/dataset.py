@@ -5,13 +5,13 @@ Implements PyTorch IterableDataset to stream data from Parquet files.
 Enables training on 100GB+ datasets without loading everything into RAM.
 """
 
+from pathlib import Path
+from typing import Dict, Iterator, List
+
+import numpy as np
+import pyarrow.parquet as pq
 import torch
 from torch.utils.data import IterableDataset
-import pandas as pd
-import pyarrow.parquet as pq
-import numpy as np
-from pathlib import Path
-from typing import List, Optional, Iterator, Dict
 
 
 class GenomicBigDataset(IterableDataset):

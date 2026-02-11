@@ -11,12 +11,11 @@ Demonstrates the complete pipeline:
 
 import sys
 from pathlib import Path
-from typing import Dict
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from data import parse_vcf_file, VariantAnnotator
+from data import VariantAnnotator, parse_vcf_file
 from models import NutrientPredictor
 
 
@@ -90,9 +89,9 @@ def run_demo(vcf_path: Path):
     for nutrient, risk_score in predictions.items():
         # Determine risk level
         level, icon = "UNKNOWN", "[?]"
-        for (low, high), (l, i) in risk_levels.items():
+        for (low, high), (lvl, icn) in risk_levels.items():
             if low <= risk_score < high:
-                level, icon = l, i
+                level, icon = lvl, icn
                 break
 
         nutrient_name = nutrient.replace("_", " ").title()
@@ -103,7 +102,7 @@ def run_demo(vcf_path: Path):
         # Provide recommendations based on risk
         if risk_score > 0.6:
             recommendations = get_recommendations(nutrient)
-            print(f"   Recommendations:")
+            print("   Recommendations:")
             for rec in recommendations:
                 print(f"     - {rec}")
 

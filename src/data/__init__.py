@@ -1,7 +1,7 @@
 """Data processing modules"""
 
-from .vcf_parser import VCFParser, parse_vcf_file, Variant
-from .annotate import VariantAnnotator, VariantAnnotation, AlphaMissenseDB
+from .annotate import AlphaMissenseDB, VariantAnnotation, VariantAnnotator
+from .vcf_parser import Variant, VCFParser, parse_vcf_file
 
 __all__ = [
     "VCFParser",

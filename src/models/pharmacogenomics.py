@@ -6,8 +6,9 @@ Critical for personalized medicine, especially for Indian population.
 """
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional
 from enum import Enum
+from typing import Dict, List
+
 import pandas as pd
 
 

@@ -5,13 +5,13 @@ Generates a professional PDF report of genomic findings.
 Uses FPDF for layout and includes charts/images.
 """
 
-from fpdf import FPDF
-import pandas as pd
-from typing import Dict, List, Optional
-from datetime import datetime
-import matplotlib.pyplot as plt
-import tempfile
 import os
+import tempfile
+from datetime import datetime
+from typing import Dict, List
+
+import matplotlib.pyplot as plt
+from fpdf import FPDF
 
 
 class ClinicalReport(FPDF):

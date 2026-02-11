@@ -10,16 +10,14 @@ Predicts risk of nutrient deficiencies based on genetic variants:
 This is a supervised learning model trained on clinical data + genotypes.
 """
 
+from pathlib import Path
+from typing import Dict, Optional, Tuple
+
+import numpy as np
+import pandas as pd
 import torch
 import torch.nn as nn
-import pandas as pd
-import numpy as np
-from dataclasses import dataclass
-from typing import Dict, List, Tuple, Optional
-from pathlib import Path
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-
 
 # Known nutrient metabolism genes and their variants
 NUTRIENT_GENES = {

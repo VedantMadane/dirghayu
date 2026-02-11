@@ -8,13 +8,14 @@ Enriches variants with:
 4. Functional consequences
 """
 
-from dataclasses import dataclass
-from typing import Dict, Optional, List
-from pathlib import Path
-import requests
 import time
-import pandas as pd
+from dataclasses import dataclass
 from functools import lru_cache
+from pathlib import Path
+from typing import Dict, Optional
+
+import pandas as pd
+import requests
 
 
 @dataclass
@@ -240,7 +241,7 @@ class VariantAnnotator:
         ann_df = pd.DataFrame(annotations)
         result = pd.concat([variants_df.reset_index(drop=True), ann_df], axis=1)
 
-        print(f"✓ Annotation complete!")
+        print("✓ Annotation complete!")
         return result
 
 
