@@ -5,7 +5,6 @@ Multi-modal deep learning model to predict life expectancy and biological age
 based on genomics, clinical markers, and lifestyle factors.
 """
 
-
 import torch
 import torch.nn as nn
 
